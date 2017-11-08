@@ -4,7 +4,7 @@ import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
-import tech.sourced.engine.util.Bblfsh
+import tech.sourced.engine.util.{Bblfsh, Time}
 
 object QueryXPathUDF extends CustomUDF {
 
@@ -36,19 +36,21 @@ object QueryXPathUDF extends CustomUDF {
   def queryXPath(nodes: Seq[Array[Byte]],
                  query: String,
                  config: Bblfsh.Config): Seq[Array[Byte]] = {
-    val client = Bblfsh.getClient(config)
-    if (nodes == null) {
-      return null
-    }
-
-    nodes.map(Node.parseFrom).flatMap(n => {
-      val result = client.filter(n, query)
-      if (result == null) {
-        None
-      } else {
-        result.toIterator
+    Time.measure("query-xpath") {
+      val client = Bblfsh.getClient(config)
+      if (nodes == null) {
+        return null
       }
-    }).map(_.toByteArray)
+
+      nodes.map(Node.parseFrom).flatMap(n => {
+        val result = client.filter(n, query)
+        if (result == null) {
+          None
+        } else {
+          result.toIterator
+        }
+      }).map(_.toByteArray)
+    }
   }
 
 }

@@ -7,7 +7,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
 import org.bblfsh.client.BblfshClient
-import tech.sourced.engine.util.Bblfsh
+import tech.sourced.engine.util.{Bblfsh, Time}
 
 /**
   * User defined function to extract UASTs from a row.
@@ -105,13 +105,15 @@ object ExtractUASTsUDF extends CustomUDF {
                          path: String,
                          content: Array[Byte],
                          lang: String): Seq[Array[Byte]] = {
-    //FIXME(bzz): not everything is UTF-8 encoded :/
-    val contentStr = new String(content, StandardCharsets.UTF_8)
-    val parsed = bblfshClient.parse(path, content = contentStr, lang = lang)
-    if (parsed.status == Status.OK) {
-      Seq(parsed.uast.get.toByteArray)
-    } else {
-      Seq()
+    Time.measure("extract-uast") {
+      //FIXME(bzz): not everything is UTF-8 encoded :/
+      val contentStr = new String(content, StandardCharsets.UTF_8)
+      val parsed = bblfshClient.parse(path, content = contentStr, lang = lang)
+      if (parsed.status == Status.OK) {
+        Seq(parsed.uast.get.toByteArray)
+      } else {
+        Seq()
+      }
     }
   }
 

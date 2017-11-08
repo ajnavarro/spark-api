@@ -3,6 +3,7 @@ package tech.sourced.engine.udf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
+import tech.sourced.engine.util.Time
 import tech.sourced.enry.Enry
 
 /**
@@ -25,10 +26,12 @@ object ClassifyLanguagesUDF extends CustomUDF {
     * @return `None` if no language could be guessed, `Some(language)` otherwise.
     */
   def getLanguage(isBinary: Boolean, path: String, content: Array[Byte]): Option[String] =
-    if (isBinary) {
-      None
-    } else {
-      val lang = Enry.getLanguage(path, content)
-      if (null == lang || lang.isEmpty) None else Some(lang)
+    Time.measure("get-language") {
+      if (isBinary) {
+        None
+      } else {
+        val lang = Enry.getLanguage(path, content)
+        if (null == lang || lang.isEmpty) None else Some(lang)
+      }
     }
 }

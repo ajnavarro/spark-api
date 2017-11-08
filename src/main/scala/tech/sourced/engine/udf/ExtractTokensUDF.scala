@@ -4,6 +4,7 @@ import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
+import tech.sourced.engine.util.Time
 
 object ExtractTokensUDF extends CustomUDF {
 
@@ -21,10 +22,12 @@ object ExtractTokensUDF extends CustomUDF {
     * @return extracted tokens
     */
   def extractTokens(nodes: Seq[Array[Byte]]): Seq[String] = {
-    if (nodes == null) {
-      Seq()
-    } else {
-      nodes.map(Node.parseFrom).map(_.token)
+    Time.measure("extract-tokens") {
+      if (nodes == null) {
+        Seq()
+      } else {
+        nodes.map(Node.parseFrom).map(_.token)
+      }
     }
   }
 
